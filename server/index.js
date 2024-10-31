@@ -2,78 +2,74 @@ import Express  from 'express'
 import { User, criarTabelas } from './db.js'
 import bcryptjs from 'bcryptjs'
 import jwt from 'jsonwebtoken'
+import cors from 'cors'
+
 const app = Express()
 app.use(Express.json())
+app.use(cors())
 
-// criarTabelas()
-app.post('/registro', async function(req,res) {
-    try{
-        const{nome, sobrenome, email, senha, dataNascimento} = req.body
-        if(!nome || !sobrenome || !email || !senha || !dataNascimento){
-            res.status(406).send('Todos os campos devem ser enviados!')
-            return
-        }
 
-        if(await User.findOne({where:{email:email}})){
-            res.status(400).send('Usuario já exixstente no sistema')
-            return
-        }
-    const senhaSegura = bcryptjs.hashSync(senha,10)
+app.post("/registro", async function (req, res) {
 
-       const novoUsuario = User.create ({
-        nome: nome, 
-        sobrenome: sobrenome,
-        email: email,
-        senha: senhaSegura,
-        dataNascimento: dataNascimento
-       })
-        res.status(201).send('ok, usuario criado')
-    }catch(erro){
-        console.log(erro)
-    }
-})
-
-app.post('/login', async function(req, res) {
-    try{
-    const { email, senha } = req.body
-    if(!email || !senha ){
-        res.status(400)("Todos os campos devem ser preenchidos")
-        return
-    }
-    const usuario = await User.findOne({where:{email:email}})
-    if(!usuario){
-    res.send('Este email não está cadastrado')
-return
-    }
-    const senhaCorreta = bcryptjs.compareSync(senha, usuario.senha)
-    if (!senhaCorreta) {
-        res.send('A senha está incorreta')
-        return
-    }
-    const token = jwt.sign(
-        {
-        nome:usuario.nome,
-        email:usuario.email,
-        status:usuario.status
-    },
-    'chavecriptografiasupersegura',
-    {expiresIn: 1000*60*60*24*30}
-
-    )
-    res.send({msg:'Você foi logado', token: token})
-
-} catch (erro){
-    console.log(erro)
-    res.status(500).send("Houve um problema")
-}
-
+  try {
+    const { nome, sobrenome, dataNascimento, email, senha } = req.body;
     
+    if (!nome || !sobrenome || !dataNascimento || !email || !senha) {
+      return res.status(406).send({ message: "Preencha todos os campos" });
+    }
+   
+    if (await User.findOne({ where: { email: email } })) {
+      return res.status(418).send({ message: "Email já cadastrado" });
+    }
+    
+    const senhaCriptografada = bcryptjs.hashSync(senha, 10);
 
-//validar informações
-//verificar a resistencia do usuário 
-//comparo a senha enviada com a senha do banco de dados
-//criar um token de autenticação
-//devolver a resposta com o token
-})
+   
+    let novoUsuario = User.create({
+      nome: nome,
+      sobrenome: sobrenome,
+      dataNascimento: dataNascimento,
+      email: email,
+      senha: senhaCriptografada,
+    });
+    novoUsuario.save(); 
+    return res.status(201).send({ message: "Usuário criado" });
+  } catch (error) {
+    return res
+      .status(error)
+      .send({ message: "Erro ao conectar com banco de dados" });
+  }
+});
+
+app.post("/login", async function (req, res) {
+    try {
+      const { email, senha } = req.body;
+      if (!email || !senha) {
+        
+        return res.status(406).send({ message: "Preencha todos os campos" });
+      }
+      const usuario = await User.findOne({ where: { email: email } }); 
+      if (!usuario) {
+        return res.status(404).send({ message: "Email não encontrado" }); 
+      }
+      if (!bcryptjs.compareSync(senha, usuario.senha)) {
+        res.status(400).send("Senha incorreta");
+      }
+     
+      const token = jwt.sign({ nome: usuario.nome, email: usuario.email, status: usuario.status }, 
+           'chavecriptografiasupersegura', 
+           {
+        expiresIn: "7d",
+      });
+      
+      return res.status(200).send({ message: 'Usuário logado com sucesso',token: token });
+  
+    } catch (error) {
+      return res
+        .status(error)
+        .send({ message: "Erro ao conectar com banco de dados" });
+    }
+  });
+
 
 app.listen(8000)

@@ -1,92 +1,125 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, useColorScheme, Image } from 'react-native';
+import { Link } from 'expo-router';
 
-const LoginScreen = () => {
-  const [username, setUsername] = useState('');
+const Login = () => {
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const colorScheme = useColorScheme();
 
   const handleLogin = () => {
-    
-    console.log('Login com:', username, password);
+    if (!email || !password) {
+      return alert("Todos os campos devem ser preenchidos");
+    }
+
+    const formData = { email, password };
+
+    try {
+      const res = fetch("localhost:8000/login", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+      switch (res.status) {
+        case 200:
+          alert("Usuário autenticado com sucesso");
+          break;
+        case 406:
+          alert("Preencha todos os campos");
+          break;
+        case 404:
+          alert("Email não encontrado");
+          break;
+        case 400:
+          alert("Senha incorreta");
+          break;
+        default:
+          alert("Erro ao se conectar com servidor");
+          break;
+      }
+    } catch (error) {
+      alert("Erro ao se conectar com o servidor");
+    }
   };
 
+  const handleForgotPassword = () => {
+    console.log('Forgot password clicked');
+  };
+
+  const isDarkMode = colorScheme === 'dark';
+
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
-    >
-      <View style={styles.innerContainer}>
-       
+    <View style={[styles.container, isDarkMode && styles.darkContainer]}>
+      <View style={[styles.background, isDarkMode && styles.darkBackground]}>
+        <Text style={[styles.title, isDarkMode && styles.darkText]}>PLAY MUSIC</Text>
         <View style={styles.loginBox}>
-          <Text style={styles.title}>PLAY MUSIC</Text>
-
-          <Text style={styles.subtitle}>Login</Text>
-
+          <Text style={[styles.subtitle, isDarkMode && styles.darkText]}>Login</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, isDarkMode && styles.darkInput]}
             placeholder="Usuário"
-            value={username}
-            onChangeText={setUsername}
-            placeholderTextColor="#999"
+            placeholderTextColor={isDarkMode ? '#888' : '#999'}
+            value={email}
+            onChangeText={(text) => setEmail(text)}
           />
           <TextInput
-            style={styles.input}
+            style={[styles.input, isDarkMode && styles.darkInput]}
             placeholder="Senha"
+            placeholderTextColor={isDarkMode ? '#888' : '#999'}
             value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            placeholderTextColor="#999"
+            onChangeText={(text) => setPassword(text)}
+            secureTextEntry={true}
           />
-
-          <TouchableOpacity>
-            <Text style={styles.forgotPassword}>Esqueci a senha</Text>
+          <Text style={[styles.forgotPassword, isDarkMode && styles.darkAccent]} onPress={handleForgotPassword}>
+            Esqueci a senha
+          </Text>
+          <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+            <Text style={styles.loginButtonText}>Acessar</Text>
           </TouchableOpacity>
-
-          <TouchableOpacity style={styles.button} onPress={handleLogin}>
-            <Text style={styles.buttonText}>Acessar</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity>
-            <Text style={styles.register}>Não possuo cadastro</Text>
-          </TouchableOpacity>
+          <Link href="Registro" style={[styles.registerLink, isDarkMode && styles.darkAccent]}>
+            Não possuo cadastro
+          </Link>
         </View>
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#2E004F',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#2E004F',
   },
-  innerContainer: {
-    width: '80%',
+  background: {
+    width: '90%',
+    borderRadius: 20,
+    padding: 20,
     alignItems: 'center',
+    backgroundColor: '#875B9B',
   },
   title: {
-    fontSize: 32,
+    fontSize: 24,
+    marginBottom: 10,
     color: '#fff',
-    marginBottom: 20, 
-  },
-  loginBox: {
-    width: '100%',
-    backgroundColor: '#875B9B', 
-    borderRadius: 20,
-    padding: 20, 
-    alignItems: 'center',
   },
   subtitle: {
     fontSize: 20,
-    color: '#fff',
     marginBottom: 20,
+    color: '#fff',
+  },
+  loginBox: {
+    width: '100%',
+    alignItems: 'center',
+    backgroundColor: '#875B9B',
   },
   input: {
     width: '100%',
-    height: 45,  
-    backgroundColor: '#D4D4D4',  
+    height: 45,
+    backgroundColor: '#D4D4D4',
     borderRadius: 10,
     paddingHorizontal: 15,
     fontSize: 16,
@@ -94,29 +127,42 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   forgotPassword: {
+    fontSize: 12,
     color: '#fff',
-    fontSize: 12,  
-    marginBottom: 20,
     textDecorationLine: 'underline',
+    marginBottom: 20,
   },
-  button: {
-    width: '60%',  
-    height: 40,    
-    backgroundColor: '#D4D4D4',  
-    borderRadius: 10,
+  loginButton: {
+    width: '50%',
+    backgroundColor: '#D4D4D4',
+    borderRadius: 20,
+    paddingVertical: 10,
     alignItems: 'center',
-    justifyContent: 'center',
     marginBottom: 20,
   },
-  buttonText: {
+  loginButtonText: {
     color: '#000',
-    fontSize: 16, 
+    fontSize: 16,
   },
-  register: {
+  registerLink: {
+    fontSize: 12,
     color: '#fff',
-    fontSize: 12,  
     textDecorationLine: 'underline',
+  },
+  darkContainer: {
+    backgroundColor: '#121212',
+  },
+  darkText: {
+    color: '#fff',
+  },
+  darkAccent: {
+    color: '#00ff99',
+  },
+  darkInput: {
+    borderColor: '#444',
+    color: '#fff',
+    backgroundColor: '#333',
   },
 });
 
-export default LoginScreen;
+export default Login;
