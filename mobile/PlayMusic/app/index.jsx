@@ -1,21 +1,22 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, useColorScheme, Image } from 'react-native';
-import { Link } from 'expo-router';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { Link, useRouter } from 'expo-router'; 
 
-const Login = () => {
-  const [email, setEmail] = useState('');
+const LoginScreen = () => {
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const colorScheme = useColorScheme();
+  const router = useRouter();
 
-  const handleLogin = () => {
-    if (!email || !password) {
-      return alert("Todos os campos devem ser preenchidos");
+  const handleLogin = async () => {
+    if (!username || !password) {
+      alert('Por favor, preencha todos os campos.');
+      return;
     }
 
-    const formData = { email, password };
+    const formData = { email: username, senha: password };
 
     try {
-      const res = fetch("localhost:8000/login", {
+      const response = await fetch("http://localhost:8000/autenticacao/login", {
         method: "POST",
         headers: {
           Accept: "application/json",
@@ -23,146 +24,147 @@ const Login = () => {
         },
         body: JSON.stringify(formData),
       });
-      switch (res.status) {
+
+      switch (response.status) {
         case 200:
-          alert("Usuário autenticado com sucesso");
-          break;
-        case 406:
-          alert("Preencha todos os campos");
+          const data = await response.json();
+          alert(data.msg); 
+          router.push('/Home');
           break;
         case 404:
-          alert("Email não encontrado");
+          alert('Este usuário não está cadastrado.');
           break;
-        case 400:
-          alert("Senha incorreta");
+        case 403:
+          alert('Senha incorreta.');
+          break;
+        case 406:
+          alert('Todos os campos devem ser preenchidos.');
           break;
         default:
-          alert("Erro ao se conectar com servidor");
+          alert('Erro ao se conectar com o servidor.');
           break;
       }
     } catch (error) {
-      alert("Erro ao se conectar com o servidor");
+      alert('Erro ao se conectar com o servidor.');
     }
   };
 
-  const handleForgotPassword = () => {
-    console.log('Forgot password clicked');
-  };
-
-  const isDarkMode = colorScheme === 'dark';
-
   return (
-    <View style={[styles.container, isDarkMode && styles.darkContainer]}>
-      <View style={[styles.background, isDarkMode && styles.darkBackground]}>
-        <Text style={[styles.title, isDarkMode && styles.darkText]}>PLAY MUSIC</Text>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+    >
+      <View style={styles.innerContainer}>
         <View style={styles.loginBox}>
-          <Text style={[styles.subtitle, isDarkMode && styles.darkText]}>Login</Text>
+          <Text style={styles.title}>PlayMusic</Text>
+
+          <Text style={styles.subtitle}>Login</Text>
+
           <TextInput
-            style={[styles.input, isDarkMode && styles.darkInput]}
-            placeholder="Usuário"
-            placeholderTextColor={isDarkMode ? '#888' : '#999'}
-            value={email}
-            onChangeText={(text) => setEmail(text)}
+            style={styles.input}
+            placeholder="Digite seu Email"
+            value={username}
+            onChangeText={setUsername}
+            placeholderTextColor="#999"
           />
           <TextInput
-            style={[styles.input, isDarkMode && styles.darkInput]}
+            style={styles.input}
             placeholder="Senha"
-            placeholderTextColor={isDarkMode ? '#888' : '#999'}
             value={password}
-            onChangeText={(text) => setPassword(text)}
-            secureTextEntry={true}
+            onChangeText={setPassword}
+            secureTextEntry
+            placeholderTextColor="#999"
           />
-          <Text style={[styles.forgotPassword, isDarkMode && styles.darkAccent]} onPress={handleForgotPassword}>
-            Esqueci a senha
-          </Text>
-          <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-            <Text style={styles.loginButtonText}>Acessar</Text>
+
+          <TouchableOpacity>
+            <Text style={styles.forgotPassword}>Esqueci a senha</Text>
           </TouchableOpacity>
-          <Link href="Registro" style={[styles.registerLink, isDarkMode && styles.darkAccent]}>
-            Não possuo cadastro
-          </Link>
+
+          <TouchableOpacity style={styles.button} onPress={handleLogin}>
+            <Text style={styles.buttonText}>Acessar</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity>
+            <Link href="/Registro" style={styles.register}>
+              <Text>Não possui uma conta? Cadastre-se</Text>
+            </Link>
+          </TouchableOpacity>
         </View>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#2D003E', 
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#2E004F',
   },
-  background: {
-    width: '90%',
-    borderRadius: 20,
-    padding: 20,
+  innerContainer: {
+    width: '90%', 
     alignItems: 'center',
-    backgroundColor: '#875B9B',
-  },
-  title: {
-    fontSize: 24,
-    marginBottom: 10,
-    color: '#fff',
-  },
-  subtitle: {
-    fontSize: 20,
-    marginBottom: 20,
-    color: '#fff',
   },
   loginBox: {
     width: '100%',
+    backgroundColor: '#5E3E99', 
+    borderRadius: 20,
+    padding: 20,
     alignItems: 'center',
-    backgroundColor: '#875B9B',
+  },
+  title: {
+    fontSize: 24, 
+    color: '#FFFFFF', 
+    marginBottom: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 18,
+    color: '#FFFFFF',
+    marginBottom: 20,
+    alignSelf: 'flex-start',
   },
   input: {
     width: '100%',
-    height: 45,
-    backgroundColor: '#D4D4D4',
-    borderRadius: 10,
+    height: 50,
+    backgroundColor: '#E6E1E5', 
+    borderRadius: 15,
     paddingHorizontal: 15,
     fontSize: 16,
     color: '#333',
     marginBottom: 15,
+    borderWidth: 1,
+    borderColor: '#000',
   },
   forgotPassword: {
-    fontSize: 12,
-    color: '#fff',
+    color: '#FFFFFF', 
+    fontSize: 14,
+    marginBottom: 20,
     textDecorationLine: 'underline',
-    marginBottom: 20,
   },
-  loginButton: {
-    width: '50%',
-    backgroundColor: '#D4D4D4',
-    borderRadius: 20,
-    paddingVertical: 10,
+  button: {
+    width: '80%', 
+    height: 50, 
+    backgroundColor: '#E6E1E5', 
+    borderRadius: 15,
     alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 20,
+    alignSelf: 'center',
   },
-  loginButtonText: {
+  buttonText: {
     color: '#000',
     fontSize: 16,
+    fontWeight: 'bold',
   },
-  registerLink: {
-    fontSize: 12,
-    color: '#fff',
+  register: {
+    color: '#FFFFFF', 
+    fontSize: 14,
     textDecorationLine: 'underline',
-  },
-  darkContainer: {
-    backgroundColor: '#121212',
-  },
-  darkText: {
-    color: '#fff',
-  },
-  darkAccent: {
-    color: '#00ff99',
-  },
-  darkInput: {
-    borderColor: '#444',
-    color: '#fff',
-    backgroundColor: '#333',
+    alignSelf: 'center',
   },
 });
 
-export default Login;
+export default LoginScreen;
