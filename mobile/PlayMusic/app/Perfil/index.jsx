@@ -13,6 +13,29 @@ export default function ProfileScreen() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
+  const handleSendImage = async ({image}) =>{
+    try{
+      const data ={
+        "file":image,
+        "uploud_preset":'ml_default'
+      }
+      const res = await fetch('/https://api.cloudnary.com/v1_1/dxs2elydl/upload',{
+        method:'POST',
+        headers:{
+          'content-type':'application/json'
+        },
+        body:JSON.stringify(data)
+      });
+      const result = await res.json();
+      setImage(result.url)
+      setUserInfo({ ...userinfo, profile_image:result.url })
+      await saveNewImageURLonBackend(result)
+      console.log(result)
+    }
+    catch (e) {
+      console.log(e)
+    }
+  }
 
   const fetchUserData = async () => {
     try {
@@ -56,7 +79,8 @@ export default function ProfileScreen() {
 
 
     if (!result.canceled) {
-      setProfileImage(result.assets[0].uri);
+      setProfileImage(result.assets[0].uri);   
+      handleSendImage(result.assets[0].uri)
     }
   };
 
