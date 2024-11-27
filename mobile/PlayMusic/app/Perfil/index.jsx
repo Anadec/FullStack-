@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, Button, Image, SafeAreaView, TextInput, Alert, TouchableOpacity, Modal } from 'react-native';
+import { StyleSheet, Text, View, Image, SafeAreaView, TextInput, Alert, TouchableOpacity, Modal } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-
+import { Link } from 'expo-router';
 
 export default function ProfileScreen() {
   const [name, setName] = useState('');
@@ -13,33 +14,38 @@ export default function ProfileScreen() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  const handleSendImage = async ({image}) =>{
-    try{
-      const data ={
-        "file":image,
-        "uploud_preset":'ml_default'
-      }
-      const res = await fetch('/https://api.cloudnary.com/v1_1/dxs2elydl/upload',{
-        method:'POST',
-        headers:{
-          'content-type':'application/json'
+  const handleSendImage = async (imageUri) => {
+    try {
+      const data = {
+        file: imageUri,
+        upload_preset: 'ml_default',
+      };
+
+      const res = await fetch('https://api.cloudinary.com/v1_1/dxs2elydl/upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        body:JSON.stringify(data)
+        body: JSON.stringify(data),
       });
+
+      if (!res.ok) {
+        throw new Error(`Erro ${res.status}: ${res.statusText}`);
+      }
+
       const result = await res.json();
-      setImage(result.url)
-      setUserInfo({ ...userinfo, profile_image:result.url })
-      await saveNewImageURLonBackend(result)
+      setProfileImage(result.url);
       console.log(result)
+    } catch (e) {
+      console.error('Erro ao enviar imagem:', e);
+      Alert.alert('Erro', 'Não foi possível enviar a imagem.');
     }
-    catch (e) {
-      console.log(e)
-    }
-  }
+    
+  };
 
   const fetchUserData = async () => {
     try {
-      const response = await fetch('http://localhost:8000/get.users', {
+      const response = await fetch('http://192.168.0.100:8000/get.users', {
         method: 'GET',
         headers: {
           Accept: 'application/json',
@@ -47,20 +53,23 @@ export default function ProfileScreen() {
         },
       });
 
-
-      if (response.ok) {
-        const userData = await response.json();
-        setName(userData.name);
-        setEmail(userData.email);
-        setBio(userData.bio);
-      } else {
-        Alert.alert('Erro', 'Não foi possível carregar os dados do usuário.');
+      if (!response.ok) {
+        throw new Error(`Erro ${response.status}: ${response.statusText}`);
       }
+
+      if (!response.headers.get('content-type')?.includes('application/json')) {
+        throw new Error('Resposta não é JSON');
+      }
+
+      const userData = await response.json();
+      setName(userData.name);
+      setEmail(userData.email);
+      setBio(userData.bio);
     } catch (error) {
+      console.error('Erro ao buscar dados:', error);
       Alert.alert('Erro', 'Erro ao conectar ao servidor.');
     }
   };
-
 
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -69,7 +78,6 @@ export default function ProfileScreen() {
       return;
     }
 
-
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -77,30 +85,25 @@ export default function ProfileScreen() {
       quality: 1,
     });
 
-
     if (!result.canceled) {
-      setProfileImage(result.assets[0].uri);   
-      handleSendImage(result.assets[0].uri)
+      setProfileImage(result.assets[0].uri);
+      handleSendImage(result.assets[0].uri);
     }
   };
-
 
   const handleSave = () => {
     setIsEditing(false);
     Alert.alert('Perfil atualizado', 'Suas alterações foram salvas.');
   };
 
-
   const handleChangePassword = () => {
     if (newPassword === confirmPassword) {
-      // enviar para backend.
       Alert.alert('Sucesso', 'Senha alterada com sucesso!');
       setIsModalVisible(false);
     } else {
       Alert.alert('Erro', 'As senhas não coincidem.');
     }
   };
-
 
   useEffect(() => {
     fetchUserData();
@@ -110,6 +113,9 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.bloco}>
+      <View style={styles.home}>
+          <Link href={"../Home"}><Ionicons name="home-outline" size={20} color="#FFFFFF" style={styles.home}/></Link>
+          </View>
         <View style={styles.margem}>
           <View style={styles.profileHeader}>
             <TouchableOpacity onPress={pickImage}>
@@ -205,6 +211,12 @@ const styles = StyleSheet.create({
     margin:30,
     borderRadius: 20
   },
+  home:{
+    display: 'flex',
+    alignItems: "end",
+    paddingHorizontal: 10,
+    paddingVertical: 5
+  },
   profileHeader: {
     alignItems: 'center',
     marginBottom: 30,
@@ -249,7 +261,7 @@ const styles = StyleSheet.create({
   },
   bioInput: {
     fontSize: 16,
-    color: 'white',
+    color: 'black',
     lineHeight: 22,
     borderColor: '#cea2ff',
     borderWidth: 1,
@@ -297,12 +309,6 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
 });
-
-
-
-
-
-
 
 
 

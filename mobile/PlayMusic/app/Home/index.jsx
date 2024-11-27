@@ -1,100 +1,92 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
-import { Link } from 'expo-router'; 
+import React from 'react';
+import { View, Text, StyleSheet, ScrollView, TextInput, Image } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Link } from 'expo-router';
 
-const LoginScreen = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-
-  const handleLogin = () => {
-    
-    console.log('Login com:', username, password);
-  };
-
+const HomeScreen = () => {
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
-    >
-      <View style={styles.innerContainer}>
-       
-        <View style={styles.loginBox}>
-          <Text style={styles.title}>Teste inicio</Text>
-          <TouchableOpacity >
-          <Link href="/Perfil" style={styles.register}> <Text >PERFIL</Text></Link>
-          </TouchableOpacity>
-        </View>
+    <View style={styles.container}>
+      <View style={styles.topBar}>
+        <Link href="../Perfil"><Ionicons name="person-circle-outline" size={24} color="#FFFFFF" /></Link>
+        <TextInput style={styles.searchBar} placeholder="Pesquisar..." placeholderTextColor="#AFAFAF" />
+        <Ionicons name="home-outline" size={20} color="#FFFFFF" />
       </View>
-    </KeyboardAvoidingView>
+
+      <Text style={styles.sectionTitle}>Você pode gostar:</Text>
+      <View style={styles.grid}>
+        {[
+          'https://i.scdn.co/image/ab67616d0000b27308ef9009b0273f096846003d',
+          'https://i.scdn.co/image/ab67616d0000b273c847c97de21b491fc0daf8b5',
+          'https://i.scdn.co/image/ab67616d0000b273ebce9f114ad43531779ebaf1',
+        ].map((imageUri, index) => (
+          <View key={index} style={styles.squareCard}>
+          <Link key={index} href="../Player" >
+            <Image style={styles.squareCard} source={{ uri: imageUri }} />
+          </Link>
+          </View>
+        ))}
+      </View>
+
+      <Text style={styles.sectionTitle}>Artistas populares:</Text>
+      <View style={styles.grid}>
+        {[
+          'https://thisis-images.spotifycdn.com/37i9dQZF1DZ06evO2sUkRq-default.jpg',
+          'https://thisis-images.spotifycdn.com/37i9dQZF1DZ06evO0FsQXS-default.jpg',
+          'https://thisis-images.spotifycdn.com/37i9dQZF1DZ06evO1vscg0-default.jpg',
+        ].map((imageUri, index) => (
+          <Image key={index} style={styles.circleCard} source={{ uri: imageUri }} />
+        ))}
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#2D003E',
+    backgroundColor: '#4B0082',
+    padding: 15,
+  },
+  topBar: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-  },
-  innerContainer: {
-    width: '50%',
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 40,
-    color: '#fff',
-    marginBottom: 20, 
-    alignSelf: 'center'
-    
-  },
-  loginBox: {
-    width: '100%',
-    backgroundColor: '#5E3E99', 
-    borderRadius: 20,
-    padding: 20, 
-    alignItems: '',
-  },
-  subtitle: {
-    fontSize: 20,
-    color: '#fff',
-    marginBottom: 20,
-  },
-  input: {
-    width: '100%',
-    height: 40,  
-    backgroundColor: '#D4D4D4',  
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    fontSize: 16,
-    color: '#333',
     marginBottom: 15,
   },
-  forgotPassword: {
-    color: '#fff',
-    fontSize: 12,  
-    marginBottom: 20,
-    textDecorationLine: 'underline',
+  searchBar: {
+    flex: 1,
+    height: 35,
+    backgroundColor: '#6A0DAD',
+    borderRadius: 15,
+    paddingHorizontal: 10,
+    marginHorizontal: 8,
+    color: '#FFFFFF',
+    fontSize: 12,
   },
-  button: {
-    width: '60%',  
-    height: 40,    
-    backgroundColor: '#D4D4D4',  
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 20,
-    alignSelf: 'center'
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginVertical: 8,
   },
-  buttonText: {
-    color: '#000',
-    fontSize: 16, 
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 15,
   },
-  register: {
-    color: '#fff',
-    fontSize: 12,  
-    textDecorationLine: 'underline',
-    alignSelf: 'center'
+  squareCard: {
+    width: 100,
+    height: 100,
+    aspectRatio: 1,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  circleCard: {
+    width: '28%',
+    aspectRatio: 1,
+    borderRadius: 50,
+    marginBottom: 10,
   },
 });
 
-export default LoginScreen;
+export default HomeScreen;
